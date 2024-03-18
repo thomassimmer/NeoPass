@@ -1,0 +1,135 @@
+use clipboard::{ClipboardContext, ClipboardProvider};
+use dialoguer::theme::ColorfulTheme;
+use neopass::custom_select::{Select, SelectOutput};
+use neopass::utils::{add_a_new_entry, write_entries_in_file};
+use std::error::Error;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::process::exit;
+use tabled::settings::object::Rows;
+use tabled::settings::{Alignment, Style};
+use tabled::Table;
+
+use neopass::entry::Entry;
+
+fn main() -> Result<(), Box<dyn Error>> {
+    // 1. Load existing passwords from file
+    let mut entries = Vec::new();
+    let file_path = "passwords.txt";
+    let file = File::open(file_path).unwrap();
+    let reader = BufReader::new(file);
+    let lines = reader.lines().enumerate();
+
+    for (_index, bufread) in lines {
+        let line = bufread.unwrap_or_default();
+        let parts: Vec<&str> = line.split(',').collect();
+        if parts.len() == 3 {
+            entries.push(Entry {
+                application: parts[0].trim().to_string(),
+                username: parts[1].trim().to_string(),
+                password: parts[2].trim().to_string(),
+            });
+        }
+    }
+
+    let mut copied_item = None;
+
+    loop {
+        // Clean and get cursor back on top.
+        print!("{}[2J", 27 as char);
+        print!("\x1b[1;1H");
+
+        // Instructions.
+        println!("Use ↑ and ↓ arrows to change selected row.");
+        println!("Press 'a' to add an new entry.");
+        println!("Press 'd' or Del to delete an entry.");
+        println!("Press Enter or Space to copy the password in your clipboard.");
+        println!("Use 'q' or Ctrl + C to quit.\n");
+
+        if entries.is_empty() {
+            println!("No credentials yet. Add one:\n");
+
+            entries.push(add_a_new_entry());
+
+            write_entries_in_file(file_path, &entries);
+            continue;
+        }
+
+        if copied_item.is_some() {
+            println!("✅ Copied password to clipboard.\n");
+        }
+
+        // Build table.
+        let mut table = Table::new(entries.iter().map(|e| Entry {
+            application: e.application.clone(),
+            username: e.username.clone(),
+            password: "********".to_string(),
+        }));
+        let table = table
+            .with(Style::rounded())
+            .modify(Rows::new(1..), Alignment::left());
+
+        let table_as_string = table.to_string();
+
+        // Get table rows so we can make them selectable.
+        let mut rows: Vec<&str> = table_as_string.split('\n').collect::<Vec<&str>>();
+
+        // TODO: Find a way to print this last line.
+        let _last_line = rows.remove(rows.len() - 1);
+
+        // Display table header.
+        println!("  {}", rows[0]);
+        println!("  {}", rows[1]);
+        println!("  {}", rows[2]);
+
+        // Display entries.
+        if let Some(selection) = Select::with_theme(&ColorfulTheme::default())
+            .default(copied_item.unwrap_or_default())
+            .items(&rows[3..rows.len()])
+            .interact_opt()
+            .unwrap()
+        {
+            match selection {
+                SelectOutput::Copy(index) => {
+                    let entry = entries.iter().nth(index as usize).ok_or("Invalid index.")?;
+
+                    // Copy password to clipboard
+                    let mut cp: ClipboardContext = ClipboardProvider::new().unwrap();
+                    cp.set_contents(entry.password.clone())?;
+
+                    copied_item = Some(index);
+                }
+
+                SelectOutput::Add => {
+                    // Print the rest of the table. It's cleaner.
+                    for row in &rows[3..] {
+                        println!("  {}", row);
+                    }
+                    println!();
+
+                    entries.push(add_a_new_entry());
+
+                    write_entries_in_file(file_path, &entries);
+
+                    copied_item = None;
+                }
+
+                SelectOutput::Delete(index) => {
+                    let _removed_instance = entries.remove(index);
+
+                    write_entries_in_file(file_path, &entries);
+
+                    copied_item = None;
+                }
+            }
+        } else {
+            // Print the rest of the table. It's cleaner.
+            for row in &rows[3..] {
+                println!("  {}", row);
+            }
+            println!();
+
+            exit(0);
+        }
+    }
+}
