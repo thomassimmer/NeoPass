@@ -5,5 +5,6 @@ pub mod paging;
 pub mod utils;
 
 pub mod theme {
+    pub mod custom_colorful_theme;
     pub mod render;
 }

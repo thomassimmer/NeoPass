@@ -8,17 +8,19 @@ use dialoguer::{theme::Theme, Result};
 #[cfg(feature = "fuzzy-select")]
 use fuzzy_matcher::skim::SkimMatcherV2;
 
+use super::custom_colorful_theme::ColorfulTheme;
+
 /// Helper struct to conveniently render a theme.
 pub(crate) struct TermThemeRenderer<'a> {
     term: &'a Term,
-    theme: &'a dyn Theme,
+    theme: ColorfulTheme,
     height: usize,
     prompt_height: usize,
     prompts_reset_height: bool,
 }
 
 impl<'a> TermThemeRenderer<'a> {
-    pub fn new(term: &'a Term, theme: &'a dyn Theme) -> TermThemeRenderer<'a> {
+    pub fn new(term: &'a Term, theme: ColorfulTheme) -> TermThemeRenderer<'a> {
         TermThemeRenderer {
             term,
             theme,
@@ -104,9 +106,15 @@ impl<'a> TermThemeRenderer<'a> {
         })
     }
 
-    pub fn select_prompt_item(&mut self, text: &str, active: bool) -> Result {
+    pub fn select_prompt_item(
+        &mut self,
+        text: &str,
+        active: bool,
+        last: bool,
+    ) -> Result {
         self.write_formatted_line(|this, buf| {
-            this.theme.format_select_prompt_item(buf, text, active)
+            this.theme
+                .format_select_prompt_item(buf, text, active, last)
         })
     }
 

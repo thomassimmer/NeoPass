@@ -1,15 +1,15 @@
 // Three changes were made in this file so we could send back specific events
 // to main in case of deletion, copy, or addition.
-
+use std::cmp::min;
 use std::{io, ops::Rem};
 
 use console::{Key, Term};
-use dialoguer::{
-    theme::{SimpleTheme, Theme},
-    Result,
-};
+use dialoguer::Result;
 
-use crate::{paging::Paging, theme::render::TermThemeRenderer};
+use crate::{
+    paging::Paging,
+    theme::{custom_colorful_theme::ColorfulTheme, render::TermThemeRenderer},
+};
 
 // THIS IS NEW.
 #[derive(Debug)]
@@ -43,30 +43,28 @@ pub enum SelectOutput {
 /// }
 /// ```
 #[derive(Clone)]
-pub struct Select<'a> {
+pub struct Select {
     default: usize,
     items: Vec<String>,
     prompt: Option<String>,
     report: bool,
     clear: bool,
-    theme: &'a dyn Theme,
+    theme: ColorfulTheme,
     max_length: Option<usize>,
 }
 
-impl Default for Select<'static> {
+impl Default for Select {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Select<'static> {
+impl Select {
     /// Creates a select prompt with default theme.
     pub fn new() -> Self {
-        Self::with_theme(&SimpleTheme)
+        Self::with_theme(ColorfulTheme::default())
     }
-}
 
-impl Select<'_> {
     /// Indicates whether select menu should be erased from the screen after interaction.
     ///
     /// The default is to clear the menu.
@@ -241,7 +239,11 @@ impl Select<'_> {
                 .skip(paging.current_page * paging.capacity)
                 .take(paging.capacity)
             {
-                render.select_prompt_item(item, sel == idx)?;
+                render.select_prompt_item(
+                    item,
+                    sel == idx,
+                    idx == min(self.items.len(), paging.capacity) - 1,
+                )?;
             }
 
             term.flush()?;
@@ -348,9 +350,7 @@ impl Select<'_> {
             }
         }
     }
-}
 
-impl<'a> Select<'a> {
     /// Creates a select prompt with a specific theme.
     ///
     /// ## Example
@@ -365,7 +365,7 @@ impl<'a> Select<'a> {
     ///         .unwrap();
     /// }
     /// ```
-    pub fn with_theme(theme: &'a dyn Theme) -> Self {
+    pub fn with_theme(theme: ColorfulTheme) -> Self {
         Self {
             default: !0,
             items: vec![],

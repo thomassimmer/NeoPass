@@ -1,6 +1,6 @@
 use clipboard::{ClipboardContext, ClipboardProvider};
-use dialoguer::theme::ColorfulTheme;
 use neopass::custom_select::{Select, SelectOutput};
+use neopass::theme::custom_colorful_theme::ColorfulTheme;
 use neopass::utils::{add_a_new_entry, display_end_of_table, modify_entry, write_entries_in_file};
 use std::error::Error;
 use std::fs::File;
@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         print!("\x1b[1;1H");
 
         // Instructions.
-        println!("Use ↑ and ↓ arrows to change selected row.");
+        println!("Use ↑ and ↓ arrows to navigate between entries.");
         println!("Press 'a' to add an new entry.");
         println!("Press 'd' or Del to delete an entry.");
         println!("Press Enter or Space to copy the password in your clipboard.");
@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut rows: Vec<&str> = table_as_string.split('\n').collect::<Vec<&str>>();
 
         // TODO: Find a way to print this last line.
-        let _last_line = rows.remove(rows.len() - 1);
+        let last_line = rows.remove(rows.len() - 1);
 
         // Display table header.
         println!("  {}", rows.remove(0));
@@ -83,7 +83,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("  {}", rows.remove(0));
 
         // Display entries.
-        if let Some(selection) = Select::with_theme(&ColorfulTheme::default())
+        let mut theme = ColorfulTheme::default();
+        theme.last_line = last_line.to_string();
+
+        if let Some(selection) = Select::with_theme(theme)
             .default(copied_item.unwrap_or_default())
             .items(&rows[..rows.len()])
             .interact_opt()
