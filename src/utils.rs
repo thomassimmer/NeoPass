@@ -1,25 +1,75 @@
-use std::{fs::File, io::Write};
+use ::rand::{thread_rng, Rng};
+use cocoon::Cocoon;
+use std::io::{Error, ErrorKind};
+use std::{error::Error as ErrorTrait, fs::File};
 
 use dialoguer::{theme::ColorfulTheme, Input, Password};
-use rand::{thread_rng, Rng};
 
+use crate::config::CLEAR_SCREEN;
 use crate::{
-    config::{PASSWORD_LENGTH, SYMBOLS_TO_USE_IN_PASSWORDS},
+    config::{FILE_PATH, PASSWORD_LENGTH, SYMBOLS_TO_USE_IN_PASSWORDS},
     entry::Entry,
 };
 
-pub fn write_entries_in_file(file_path: &str, entries: &Vec<Entry>) {
-    // This overwrites the content of the file with the current entries.
+pub fn decrypt_file(password: &str) -> Result<Vec<Entry>, Box<dyn ErrorTrait>> {
+    let mut entries = Vec::new();
+    let mut cocoon = Cocoon::new(password.as_bytes());
 
-    let mut file = File::create(file_path).unwrap();
-    let mut content = String::new();
+    // Read the contents of the input file
+    if let Ok(mut input_file) = File::open(FILE_PATH) {
+        let encoded = match cocoon.parse(&mut input_file) {
+            Ok(encoded) => encoded,
+            Err(_) => {
+                return Err(Box::new(Error::new(ErrorKind::Other, "Invalid password")));
+            }
+        };
+
+        let lines = std::str::from_utf8(&encoded)?
+            .split('\n')
+            .collect::<Vec<&str>>();
+
+        for line in lines {
+            let parts: Vec<&str> = line.split(',').collect();
+            if parts.len() == 3 {
+                entries.push(Entry {
+                    application: parts[0].trim().to_string(),
+                    username: parts[1].trim().to_string(),
+                    password: parts[2].trim().to_string(),
+                });
+            }
+        }
+    } else {
+        let mut file = File::create(FILE_PATH)?;
+        let contents = "BEGIN".to_string();
+        cocoon.dump(contents.into_bytes(), &mut file).unwrap();
+    }
+
+    Ok(entries)
+}
+
+pub fn write_entries_in_file(
+    entries: &Vec<Entry>,
+    password: &str,
+) -> Result<(), Box<dyn ErrorTrait>> {
+    let mut contents = String::new();
     for entry in entries {
-        content.push_str(&format!(
+        contents.push_str(&format!(
             "{},{},{}\n",
             entry.application, entry.username, entry.password
         ));
     }
-    let _ = file.write(content.as_bytes());
+
+    encrypt_file(contents, password)
+}
+
+pub fn encrypt_file(contents: String, password: &str) -> Result<(), Box<dyn ErrorTrait>> {
+    let mut cocoon = Cocoon::new(password.as_bytes());
+
+    // Write the encrypted contents to the output file
+    let mut file = File::create(FILE_PATH)?;
+    cocoon.dump(contents.into_bytes(), &mut file).unwrap();
+
+    Ok(())
 }
 
 pub fn generate_password(length: usize) -> String {
@@ -99,4 +149,9 @@ pub fn display_end_of_table(rows: Vec<&str>) {
         println!("  {}", row);
     }
     println!();
+}
+
+pub fn clear_screen() {
+    // Clean and get cursor back on top.
+    print!("{}", CLEAR_SCREEN);
 }

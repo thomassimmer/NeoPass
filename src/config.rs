@@ -1,3 +1,16 @@
 pub const PASSWORD_LENGTH: usize = 20;
-
-pub const SYMBOLS_TO_USE_IN_PASSWORDS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!*#_-|&@~$";
+pub const SYMBOLS_TO_USE_IN_PASSWORDS: &str =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!*#_-|&@~$";
+pub const FILE_PATH: &str = "passwords.txt";
+pub const CLEAR_SCREEN: &str = "\x1b[2J\x1b[1;1H";
+pub const ENTER_NEW_PASSWORD: &str = "Enter a new password:";
+pub const ENTER_PASSWORD: &str = "Enter your password:";
+pub const PASSWORD_COPIED: &str = "✅ Copied password to clipboard.\n";
+pub const INSTRUCTIONS: &str = "Use ↑ and ↓ arrows to navigate between entries.\n\
+Press 'a' to add an new entry.\n\
+Press 'd' or Del to delete an entry.\n\
+Press Enter or Space to copy the password in your clipboard.\n\
+Use 'q' or Ctrl + C to quit.\n";
+pub const INVALID_PASSWORD: &str = "❌ Invalid password.";
+pub const CHECKING_PASSWORD: &str = "Checking...";
+pub const NO_PASSWORD: &str = "You do not have credentials yet. Add one:\n";

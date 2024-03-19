@@ -1,11 +1,16 @@
 use clipboard::{ClipboardContext, ClipboardProvider};
+use neopass::config::{
+    CHECKING_PASSWORD, ENTER_NEW_PASSWORD, ENTER_PASSWORD, FILE_PATH, INSTRUCTIONS,
+    INVALID_PASSWORD, NO_PASSWORD, PASSWORD_COPIED,
+};
 use neopass::custom_select::{Select, SelectOutput};
 use neopass::theme::custom_colorful_theme::ColorfulTheme;
-use neopass::utils::{add_a_new_entry, display_end_of_table, modify_entry, write_entries_in_file};
+use neopass::utils::{
+    add_a_new_entry, clear_screen, decrypt_file, display_end_of_table, modify_entry,
+    write_entries_in_file,
+};
 use std::error::Error;
 use std::fs::File;
-use std::io::{BufRead, BufReader};
-use std::process::exit;
 use tabled::settings::object::Rows;
 use tabled::settings::{Alignment, Style};
 use tabled::Table;
@@ -13,52 +18,56 @@ use tabled::Table;
 use neopass::entry::Entry;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // Load existing passwords from file
+    let mut password_is_correct = false;
+    let mut password = String::new();
     let mut entries = Vec::new();
-    let file_path = "passwords.txt";
 
-    if let Ok(file) = File::open(file_path) {
-        let reader = BufReader::new(file);
-        let lines = reader.lines().enumerate();
+    clear_screen();
 
-        for (_index, bufread) in lines {
-            let line = bufread.unwrap_or_default();
-            let parts: Vec<&str> = line.split(',').collect();
-            if parts.len() == 3 {
-                entries.push(Entry {
-                    application: parts[0].trim().to_string(),
-                    username: parts[1].trim().to_string(),
-                    password: parts[2].trim().to_string(),
-                });
-            }
+    while !password_is_correct {
+        // Ask the user for a password
+        if File::open(FILE_PATH).is_ok() {
+            println!("{}", ENTER_PASSWORD);
+        } else {
+            println!("{}", ENTER_NEW_PASSWORD);
         }
+
+        std::io::stdin().read_line(&mut password)?;
+
+        println!("{}", CHECKING_PASSWORD);
+
+        clear_screen();
+
+        entries = match decrypt_file(&password) {
+            Ok(entries) => {
+                password_is_correct = true;
+                entries
+            }
+            Err(_) => {
+                println!("{}", INVALID_PASSWORD);
+                vec![]
+            }
+        };
     }
 
     let mut copied_item = None;
 
     loop {
-        // Clean and get cursor back on top.
-        print!("{}[2J", 27 as char);
-        print!("\x1b[1;1H");
+        clear_screen();
 
-        // Instructions.
-        println!("Use ↑ and ↓ arrows to navigate between entries.");
-        println!("Press 'a' to add an new entry.");
-        println!("Press 'd' or Del to delete an entry.");
-        println!("Press Enter or Space to copy the password in your clipboard.");
-        println!("Use 'q' or Ctrl + C to quit.\n");
+        println!("{}", INSTRUCTIONS);
 
         if entries.is_empty() {
-            println!("No credentials yet. Add one:\n");
+            println!("{}", NO_PASSWORD);
 
             entries.push(add_a_new_entry());
 
-            write_entries_in_file(file_path, &entries);
+            write_entries_in_file(&entries, &password)?;
             continue;
         }
 
         if copied_item.is_some() {
-            println!("✅ Copied password to clipboard.\n");
+            println!("{}", PASSWORD_COPIED);
         }
 
         // Build table.
@@ -91,52 +100,55 @@ fn main() -> Result<(), Box<dyn Error>> {
         if let Some(selection) = Select::with_theme(theme)
             .default(copied_item.unwrap_or_default())
             .items(&rows[..rows.len()])
-            .interact_opt()
-            .unwrap()
+            .interact_opt()?
         {
             match selection {
+                // User selected one item.
                 SelectOutput::Copy(index) => {
                     let entry = entries.iter().nth(index as usize).ok_or("Invalid index.")?;
 
                     // Copy password to clipboard
-                    let mut cp: ClipboardContext = ClipboardProvider::new().unwrap();
+                    let mut cp: ClipboardContext = ClipboardProvider::new()?;
                     cp.set_contents(entry.password.clone())?;
 
                     copied_item = Some(index);
                 }
 
+                // User wants to add a new item.
                 SelectOutput::Add => {
                     display_end_of_table(rows);
 
                     entries.push(add_a_new_entry());
 
-                    write_entries_in_file(file_path, &entries);
+                    write_entries_in_file(&entries, &password)?;
 
                     copied_item = None;
                 }
 
+                // User wants to delete an item.
                 SelectOutput::Delete(index) => {
                     let _removed_instance = entries.remove(index);
 
-                    write_entries_in_file(file_path, &entries);
+                    write_entries_in_file(&entries, &password)?;
 
                     copied_item = None;
                 }
 
+                // User wants to modify one item.
                 SelectOutput::Modify(index) => {
                     display_end_of_table(rows);
 
                     let modified_entry = modify_entry(&entries[index]);
                     entries[index] = modified_entry;
 
-                    write_entries_in_file(file_path, &entries);
+                    write_entries_in_file(&entries, &password)?;
 
                     copied_item = None;
                 }
             }
         } else {
             display_end_of_table(rows);
-            exit(0);
+            return Ok(());
         }
     }
 }
