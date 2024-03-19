@@ -16,19 +16,21 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Load existing passwords from file
     let mut entries = Vec::new();
     let file_path = "passwords.txt";
-    let file = File::open(file_path).unwrap();
-    let reader = BufReader::new(file);
-    let lines = reader.lines().enumerate();
 
-    for (_index, bufread) in lines {
-        let line = bufread.unwrap_or_default();
-        let parts: Vec<&str> = line.split(',').collect();
-        if parts.len() == 3 {
-            entries.push(Entry {
-                application: parts[0].trim().to_string(),
-                username: parts[1].trim().to_string(),
-                password: parts[2].trim().to_string(),
-            });
+    if let Ok(file) = File::open(file_path) {
+        let reader = BufReader::new(file);
+        let lines = reader.lines().enumerate();
+
+        for (_index, bufread) in lines {
+            let line = bufread.unwrap_or_default();
+            let parts: Vec<&str> = line.split(',').collect();
+            if parts.len() == 3 {
+                entries.push(Entry {
+                    application: parts[0].trim().to_string(),
+                    username: parts[1].trim().to_string(),
+                    password: parts[2].trim().to_string(),
+                });
+            }
         }
     }
 
