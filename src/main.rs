@@ -1,54 +1,19 @@
 use clipboard::{ClipboardContext, ClipboardProvider};
-use neopass::config::{
-    CHECKING_PASSWORD, ENTER_NEW_PASSWORD, ENTER_PASSWORD, FILE_PATH, INSTRUCTIONS,
-    INVALID_PASSWORD, NO_PASSWORD, PASSWORD_COPIED,
-};
+use neopass::config::{INSTRUCTIONS, PASSWORD_COPIED};
 use neopass::custom_select::{Select, SelectOutput};
 use neopass::theme::custom_colorful_theme::ColorfulTheme;
 use neopass::utils::{
-    add_a_new_entry, clear_screen, decrypt_file, display_end_of_table, modify_entry,
-    write_entries_in_file,
+    add_a_new_entry, add_first_entry, build_rows, clear_screen, display_end_of_table,
+    get_user_password, modify_entry, write_entries_in_file,
 };
 use std::error::Error;
-use std::fs::File;
-use tabled::settings::object::Rows;
-use tabled::settings::{Alignment, Style};
-use tabled::Table;
-
-use neopass::entry::Entry;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut password_is_correct = false;
     let mut password = String::new();
     let mut entries = Vec::new();
 
     clear_screen();
-
-    while !password_is_correct {
-        // Ask the user for a password
-        if File::open(FILE_PATH).is_ok() {
-            println!("{}", ENTER_PASSWORD);
-        } else {
-            println!("{}", ENTER_NEW_PASSWORD);
-        }
-
-        std::io::stdin().read_line(&mut password)?;
-
-        println!("{}", CHECKING_PASSWORD);
-
-        clear_screen();
-
-        entries = match decrypt_file(&password) {
-            Ok(entries) => {
-                password_is_correct = true;
-                entries
-            }
-            Err(_) => {
-                println!("{}", INVALID_PASSWORD);
-                vec![]
-            }
-        };
-    }
+    get_user_password(&mut entries, &mut password)?;
 
     let mut copied_item = None;
 
@@ -58,11 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("{}", INSTRUCTIONS);
 
         if entries.is_empty() {
-            println!("{}", NO_PASSWORD);
-
-            entries.push(add_a_new_entry());
-
-            write_entries_in_file(&entries, &password)?;
+            add_first_entry(&mut entries, &mut password)?;
             continue;
         }
 
@@ -70,38 +31,25 @@ fn main() -> Result<(), Box<dyn Error>> {
             println!("{}", PASSWORD_COPIED);
         }
 
-        // Build table.
-        let mut table = Table::new(entries.iter().map(|e| Entry {
-            application: e.application.clone(),
-            username: e.username.clone(),
-            password: "********".to_string(),
-        }));
-        let table = table
-            .with(Style::rounded())
-            .modify(Rows::new(1..), Alignment::left());
-
-        let table_as_string = table.to_string();
-
-        // Get table rows so we can make them selectable.
-        let mut rows: Vec<&str> = table_as_string.split('\n').collect::<Vec<&str>>();
-
-        // TODO: Find a way to print this last line.
-        let last_line = rows.remove(rows.len() - 1);
+        let mut rows = build_rows(&entries);
 
         // Display table header.
         println!("  {}", rows.remove(0));
         println!("  {}", rows.remove(0));
         println!("  {}", rows.remove(0));
 
-        // Display entries.
+        // Prepare theme for select.
         let mut theme = ColorfulTheme::default();
-        theme.last_line = last_line.to_string();
+        theme.last_line = rows[rows.len() - 1].to_string();
 
+        // Display entries.
         if let Some(selection) = Select::with_theme(theme)
             .default(copied_item.unwrap_or_default())
-            .items(&rows[..rows.len()])
+            .items(&rows[..rows.len() - 1])
             .interact_opt()?
         {
+            copied_item = None;
+
             match selection {
                 // User selected one item.
                 SelectOutput::Copy(index) => {
@@ -121,8 +69,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                     entries.push(add_a_new_entry());
 
                     write_entries_in_file(&entries, &password)?;
-
-                    copied_item = None;
                 }
 
                 // User wants to delete an item.
@@ -130,8 +76,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                     let _removed_instance = entries.remove(index);
 
                     write_entries_in_file(&entries, &password)?;
-
-                    copied_item = None;
                 }
 
                 // User wants to modify one item.
@@ -142,8 +86,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                     entries[index] = modified_entry;
 
                     write_entries_in_file(&entries, &password)?;
-
-                    copied_item = None;
                 }
             }
         } else {
