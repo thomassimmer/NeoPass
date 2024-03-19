@@ -17,6 +17,7 @@ pub enum SelectOutput {
     Copy(usize),
     Add,
     Delete(usize),
+    Modify(usize),
 }
 
 /// Renders a select prompt.
@@ -303,7 +304,7 @@ impl Select<'_> {
                     return Ok(Some(SelectOutput::Copy(sel)));
                 }
                 // THIS IS NEW.
-                Key::Char('a') => {
+                Key::Char('a') | Key::Char('A') => {
                     if self.clear {
                         render.clear()?;
                     }
@@ -314,7 +315,7 @@ impl Select<'_> {
                     return Ok(Some(SelectOutput::Add));
                 }
                 // THIS IS NEW.
-                Key::Del | Key::Char('d') if sel != !0 => {
+                Key::Del | Key::Char('d') | Key::Char('D') if sel != !0 => {
                     if self.clear {
                         render.clear()?;
                     }
@@ -323,6 +324,17 @@ impl Select<'_> {
                     term.flush()?;
 
                     return Ok(Some(SelectOutput::Delete(sel)));
+                }
+                // THIS IS NEW.
+                Key::Char('m') | Key::Char('M') if sel != !0 => {
+                    if self.clear {
+                        render.clear()?;
+                    }
+
+                    term.show_cursor()?;
+                    term.flush()?;
+
+                    return Ok(Some(SelectOutput::Modify(sel)));
                 }
                 _ => {}
             }

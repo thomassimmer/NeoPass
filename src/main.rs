@@ -1,7 +1,7 @@
 use clipboard::{ClipboardContext, ClipboardProvider};
 use dialoguer::theme::ColorfulTheme;
 use neopass::custom_select::{Select, SelectOutput};
-use neopass::utils::{add_a_new_entry, write_entries_in_file};
+use neopass::utils::{add_a_new_entry, display_end_of_table, modify_entry, write_entries_in_file};
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -13,7 +13,7 @@ use tabled::Table;
 use neopass::entry::Entry;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // 1. Load existing passwords from file
+    // Load existing passwords from file
     let mut entries = Vec::new();
     let file_path = "passwords.txt";
     let file = File::open(file_path).unwrap();
@@ -78,14 +78,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         let _last_line = rows.remove(rows.len() - 1);
 
         // Display table header.
-        println!("  {}", rows[0]);
-        println!("  {}", rows[1]);
-        println!("  {}", rows[2]);
+        println!("  {}", rows.remove(0));
+        println!("  {}", rows.remove(0));
+        println!("  {}", rows.remove(0));
 
         // Display entries.
         if let Some(selection) = Select::with_theme(&ColorfulTheme::default())
             .default(copied_item.unwrap_or_default())
-            .items(&rows[3..rows.len()])
+            .items(&rows[..rows.len()])
             .interact_opt()
             .unwrap()
         {
@@ -101,11 +101,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
 
                 SelectOutput::Add => {
-                    // Print the rest of the table. It's cleaner.
-                    for row in &rows[3..] {
-                        println!("  {}", row);
-                    }
-                    println!();
+                    display_end_of_table(rows);
 
                     entries.push(add_a_new_entry());
 
@@ -121,14 +117,20 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                     copied_item = None;
                 }
+
+                SelectOutput::Modify(index) => {
+                    display_end_of_table(rows);
+
+                    let modified_entry = modify_entry(&entries[index]);
+                    entries[index] = modified_entry;
+
+                    write_entries_in_file(file_path, &entries);
+
+                    copied_item = None;
+                }
             }
         } else {
-            // Print the rest of the table. It's cleaner.
-            for row in &rows[3..] {
-                println!("  {}", row);
-            }
-            println!();
-
+            display_end_of_table(rows);
             exit(0);
         }
     }

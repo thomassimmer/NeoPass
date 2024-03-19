@@ -1,3 +1,4 @@
+pub mod config;
 pub mod custom_select;
 pub mod entry;
 pub mod paging;
