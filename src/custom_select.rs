@@ -24,24 +24,6 @@ pub enum SelectOutput {
 ///
 /// User can select from one or more options.
 /// Interaction returns index of an item selected in the order they appear in `item` invocation or `items` slice.
-///
-/// ## Example
-///
-/// ```rust,no_run
-/// use dialoguer::Select;
-///
-/// fn main() {
-///     let items = vec!["foo", "bar", "baz"];
-///
-///     let selection = Select::new()
-///         .with_prompt("What do you choose?")
-///         .items(&items)
-///         .interact()
-///         .unwrap();
-///
-///     println!("You chose: {}", items[selection]);
-/// }
-/// ```
 #[derive(Clone)]
 pub struct Select {
     default: usize,
@@ -94,20 +76,6 @@ impl Select {
     }
 
     /// Add a single item to the selector.
-    ///
-    /// ## Example
-    ///
-    /// ```rust,no_run
-    /// use dialoguer::Select;
-    ///
-    /// fn main() {
-    ///     let selection = Select::new()
-    ///         .item("Item 1")
-    ///         .item("Item 2")
-    ///         .interact()
-    ///         .unwrap();
-    /// }
-    /// ```
     pub fn item<T: ToString>(mut self, item: T) -> Self {
         self.items.push(item.to_string());
         self
@@ -155,27 +123,6 @@ impl Select {
     /// The user can select the items with the 'Space' bar or 'Enter' and the index of selected item will be returned.
     /// The dialog is rendered on stderr.
     /// Result contains `Some(index)` if user selected one of items using 'Enter' or `None` if user cancelled with 'Esc' or 'q'.
-    ///
-    /// ## Example
-    ///
-    ///```rust,no_run
-    /// use dialoguer::Select;
-    ///
-    /// fn main() {
-    ///     let items = vec!["foo", "bar", "baz"];
-    ///
-    ///     let selection = Select::new()
-    ///         .with_prompt("What do you choose?")
-    ///         .items(&items)
-    ///         .interact_opt()
-    ///         .unwrap();
-    ///
-    ///     match selection {
-    ///         Some(index) => println!("You chose: {}", items[index]),
-    ///         None => println!("You did not choose anything.")
-    ///     }
-    /// }
-    ///```
     #[inline]
     pub fn interact_opt(self) -> Result<Option<SelectOutput>> {
         self.interact_on_opt(&Term::stderr())
@@ -352,19 +299,6 @@ impl Select {
     }
 
     /// Creates a select prompt with a specific theme.
-    ///
-    /// ## Example
-    ///
-    /// ```rust,no_run
-    /// use dialoguer::{theme::ColorfulTheme, Select};
-    ///
-    /// fn main() {
-    ///     let selection = Select::with_theme(&ColorfulTheme::default())
-    ///         .items(&["foo", "bar", "baz"])
-    ///         .interact()
-    ///         .unwrap();
-    /// }
-    /// ```
     pub fn with_theme(theme: ColorfulTheme) -> Self {
         Self {
             default: !0,
