@@ -1,4 +1,4 @@
-use ::rand::{thread_rng, Rng};
+use clipboard::{ClipboardContext, ClipboardProvider};
 use cocoon::Cocoon;
 use std::io::{Error, ErrorKind};
 use std::{error::Error as ErrorTrait, fs::File};
@@ -6,22 +6,20 @@ use tabled::settings::object::Rows;
 use tabled::settings::{Alignment, Style};
 use tabled::Table;
 
-use dialoguer::{theme::ColorfulTheme, Input, Password};
+use dialoguer::{theme::ColorfulTheme, Password};
 
 use crate::config::{
-    CHECKING_PASSWORD, CLEAR_SCREEN, ENTER_NEW_PASSWORD, ENTER_PASSWORD, INVALID_PASSWORD,
-    NO_PASSWORD,
+    CHECKING_PASSWORD, CLEAR_SCREEN, ENTER_NEW_PASSWORD, ENTER_PASSWORD, INSTRUCTIONS,
+    INVALID_PASSWORD, NO_PASSWORD, PASSWORD_COPIED,
 };
-use crate::{
-    config::{FILE_PATH, PASSWORD_LENGTH, SYMBOLS_TO_USE_IN_PASSWORDS},
-    entry::Entry,
-};
+use crate::entry::add_a_new_entry;
+use crate::{config::FILE_PATH, entry::Entry};
 
 pub fn decrypt_file(password: &str) -> Result<Vec<Entry>, Box<dyn ErrorTrait>> {
     let mut entries = Vec::new();
     let mut cocoon = Cocoon::new(password.as_bytes());
 
-    // Read the contents of the input file
+    // Read the contents of the password file.
     if let Ok(mut input_file) = File::open(FILE_PATH) {
         let encoded = match cocoon.parse(&mut input_file) {
             Ok(encoded) => encoded,
@@ -45,6 +43,7 @@ pub fn decrypt_file(password: &str) -> Result<Vec<Entry>, Box<dyn ErrorTrait>> {
             }
         }
     } else {
+        // Create password file.
         let mut file = File::create(FILE_PATH)?;
         let contents = "BEGIN".to_string();
         cocoon.dump(contents.into_bytes(), &mut file).unwrap();
@@ -71,82 +70,11 @@ pub fn write_entries_in_file(
 pub fn encrypt_file(contents: String, password: &str) -> Result<(), Box<dyn ErrorTrait>> {
     let mut cocoon = Cocoon::new(password.as_bytes());
 
-    // Write the encrypted contents to the output file
+    // Write the encrypted contents to the output file.
     let mut file = File::create(FILE_PATH)?;
     cocoon.dump(contents.into_bytes(), &mut file).unwrap();
 
     Ok(())
-}
-
-pub fn generate_password(length: usize) -> String {
-    let mut rng = thread_rng();
-    let chars: Vec<char> = (0..length)
-        .map(|_| {
-            SYMBOLS_TO_USE_IN_PASSWORDS
-                .chars()
-                .nth(rng.gen_range(0..SYMBOLS_TO_USE_IN_PASSWORDS.len()))
-                .unwrap()
-        })
-        .collect();
-    chars.into_iter().collect()
-}
-
-pub fn add_a_new_entry() -> Entry {
-    let application: String = Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("  Application / Website:")
-        .interact_text()
-        .unwrap();
-
-    let username: String = Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("  Username / Email:")
-        .interact_text()
-        .unwrap();
-
-    let mut password: String = Password::with_theme(&ColorfulTheme::default())
-        .with_prompt("  Password (leave empty for random):")
-        .allow_empty_password(true)
-        .interact()
-        .unwrap();
-
-    if password.is_empty() {
-        password = generate_password(PASSWORD_LENGTH);
-    }
-
-    Entry {
-        application,
-        username,
-        password,
-    }
-}
-
-pub fn modify_entry(entry: &Entry) -> Entry {
-    let application: String = Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("  Application / Website:")
-        .with_initial_text(entry.application.clone())
-        .interact_text()
-        .unwrap();
-
-    let username: String = Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("  Username / Email:")
-        .with_initial_text(entry.username.clone())
-        .interact_text()
-        .unwrap();
-
-    let mut password: String = Password::with_theme(&ColorfulTheme::default())
-        .with_prompt("  Password (leave empty for random):")
-        .allow_empty_password(true)
-        .interact()
-        .unwrap();
-
-    if password.is_empty() {
-        password = generate_password(PASSWORD_LENGTH);
-    }
-
-    Entry {
-        application,
-        username,
-        password,
-    }
 }
 
 pub fn display_end_of_table(rows: Vec<String>) {
@@ -162,22 +90,29 @@ pub fn clear_screen() {
     print!("  {}", CLEAR_SCREEN);
 }
 
+pub fn display_instructions() {
+    println!("  {}", INSTRUCTIONS);
+}
+
+pub fn display_password_copied() {
+    println!("  {}", PASSWORD_COPIED);
+}
+
 pub fn get_user_password(
     entries: &mut Vec<Entry>,
     password: &mut String,
 ) -> Result<(), Box<dyn ErrorTrait>> {
-    // Ask the user for a password
+    // Ask the user for a password.
     let mut password_is_correct = false;
-    
+
     println!();
 
     while !password_is_correct {
-        let msg: String;
-        if File::open(FILE_PATH).is_ok() {
-            msg = format!("{}", ENTER_PASSWORD);
+        let msg: String = if File::open(FILE_PATH).is_ok() {
+            ENTER_PASSWORD.to_string()
         } else {
-            msg = format!("{}", ENTER_NEW_PASSWORD);
-        }
+            ENTER_NEW_PASSWORD.to_string()
+        };
 
         *password = Password::with_theme(&ColorfulTheme::default())
             .with_prompt(msg)
@@ -188,7 +123,7 @@ pub fn get_user_password(
 
         clear_screen();
 
-        match decrypt_file(&password) {
+        match decrypt_file(password) {
             Ok(found_entries) => {
                 password_is_correct = true;
                 *entries = found_entries;
@@ -204,17 +139,17 @@ pub fn get_user_password(
 
 pub fn add_first_entry(
     entries: &mut Vec<Entry>,
-    password: &mut String,
+    password: &mut str,
 ) -> Result<(), Box<dyn ErrorTrait>> {
     println!("  {}", NO_PASSWORD);
 
-    entries.push(add_a_new_entry());
+    add_a_new_entry(entries);
+    write_entries_in_file(entries, password)?;
 
-    write_entries_in_file(&entries, &password)?;
     Ok(())
 }
 
-pub fn build_rows(entries: &Vec<Entry>) -> Vec<String> {
+pub fn build_rows(entries: &[Entry]) -> Vec<String> {
     // Build table.
     let mut table = Table::new(entries.iter().map(|e| Entry {
         application: e.application.clone(),
@@ -228,9 +163,31 @@ pub fn build_rows(entries: &Vec<Entry>) -> Vec<String> {
     let table_as_string = table.to_string();
 
     // Get table rows so we can make them selectable.
-    let rows: Vec<String> = table_as_string
+    let mut rows: Vec<String> = table_as_string
         .split('\n')
         .map(|e| e.into())
         .collect::<Vec<String>>();
+
+    // Display table header.
+    println!("  {}", rows.remove(0));
+    println!("  {}", rows.remove(0));
+    println!("  {}", rows.remove(0));
+
     rows
+}
+
+pub fn set_password_in_clipboard(
+    entries: &[Entry],
+    index: usize,
+    copied_item: &mut Option<usize>,
+) -> Result<(), Box<dyn ErrorTrait>> {
+    let entry = &entries[index];
+
+    // Copy password to clipboard.
+    let mut cp: ClipboardContext = ClipboardProvider::new()?;
+    cp.set_contents(entry.password.clone())?;
+
+    *copied_item = Some(index);
+
+    Ok(())
 }

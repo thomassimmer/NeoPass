@@ -1,10 +1,9 @@
-use clipboard::{ClipboardContext, ClipboardProvider};
-use neopass::config::{INSTRUCTIONS, PASSWORD_COPIED};
 use neopass::custom_select::{Select, SelectOutput};
+use neopass::entry::{add_a_new_entry, modify_entry};
 use neopass::theme::custom_colorful_theme::ColorfulTheme;
 use neopass::utils::{
-    add_a_new_entry, add_first_entry, build_rows, clear_screen, display_end_of_table,
-    get_user_password, modify_entry, write_entries_in_file,
+    add_first_entry, build_rows, clear_screen, display_end_of_table, display_instructions,
+    display_password_copied, get_user_password, set_password_in_clipboard, write_entries_in_file,
 };
 use std::error::Error;
 
@@ -19,8 +18,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     loop {
         clear_screen();
-
-        println!("  {}", INSTRUCTIONS);
+        display_instructions();
 
         if entries.is_empty() {
             add_first_entry(&mut entries, &mut password)?;
@@ -28,19 +26,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
 
         if copied_item.is_some() {
-            println!("  {}", PASSWORD_COPIED);
+            display_password_copied();
         }
 
-        let mut rows = build_rows(&entries);
-
-        // Display table header.
-        println!("  {}", rows.remove(0));
-        println!("  {}", rows.remove(0));
-        println!("  {}", rows.remove(0));
-
-        // Prepare theme for select.
-        let mut theme = ColorfulTheme::default();
-        theme.last_line = rows[rows.len() - 1].to_string();
+        let rows = build_rows(&entries);
+        let theme = ColorfulTheme {
+            last_line: rows[rows.len() - 1].to_string(),
+            ..Default::default()
+        };
 
         // Display entries.
         if let Some(selection) = Select::with_theme(theme)
@@ -53,38 +46,26 @@ fn main() -> Result<(), Box<dyn Error>> {
             match selection {
                 // User selected one item.
                 SelectOutput::Copy(index) => {
-                    let entry = entries.iter().nth(index as usize).ok_or("Invalid index.")?;
-
-                    // Copy password to clipboard
-                    let mut cp: ClipboardContext = ClipboardProvider::new()?;
-                    cp.set_contents(entry.password.clone())?;
-
-                    copied_item = Some(index);
+                    set_password_in_clipboard(&entries, index, &mut copied_item)?;
                 }
 
                 // User wants to add a new item.
                 SelectOutput::Add => {
                     display_end_of_table(rows);
-
-                    entries.push(add_a_new_entry());
-
+                    add_a_new_entry(&mut entries);
                     write_entries_in_file(&entries, &password)?;
                 }
 
                 // User wants to delete an item.
                 SelectOutput::Delete(index) => {
                     let _removed_instance = entries.remove(index);
-
                     write_entries_in_file(&entries, &password)?;
                 }
 
                 // User wants to modify one item.
                 SelectOutput::Modify(index) => {
                     display_end_of_table(rows);
-
-                    let modified_entry = modify_entry(&entries[index]);
-                    entries[index] = modified_entry;
-
+                    modify_entry(&mut entries, index);
                     write_entries_in_file(&entries, &password)?;
                 }
             }
