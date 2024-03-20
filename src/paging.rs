@@ -1,6 +1,8 @@
+// No change was made in this file.
+// It is only here to be able to import it in custom_select.rs
+
 use console::Term;
 use dialoguer::Result;
-
 
 /// Creates a paging module
 ///

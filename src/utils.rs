@@ -93,17 +93,17 @@ pub fn generate_password(length: usize) -> String {
 
 pub fn add_a_new_entry() -> Entry {
     let application: String = Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("Application / Website:")
+        .with_prompt("  Application / Website:")
         .interact_text()
         .unwrap();
 
     let username: String = Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("Username / Email:")
+        .with_prompt("  Username / Email:")
         .interact_text()
         .unwrap();
 
     let mut password: String = Password::with_theme(&ColorfulTheme::default())
-        .with_prompt("Password (leave empty for random):")
+        .with_prompt("  Password (leave empty for random):")
         .allow_empty_password(true)
         .interact()
         .unwrap();
@@ -121,19 +121,19 @@ pub fn add_a_new_entry() -> Entry {
 
 pub fn modify_entry(entry: &Entry) -> Entry {
     let application: String = Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("Application / Website:")
+        .with_prompt("  Application / Website:")
         .with_initial_text(entry.application.clone())
         .interact_text()
         .unwrap();
 
     let username: String = Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("Username / Email:")
+        .with_prompt("  Username / Email:")
         .with_initial_text(entry.username.clone())
         .interact_text()
         .unwrap();
 
     let mut password: String = Password::with_theme(&ColorfulTheme::default())
-        .with_prompt("Password (leave empty for random):")
+        .with_prompt("  Password (leave empty for random):")
         .allow_empty_password(true)
         .interact()
         .unwrap();
@@ -159,7 +159,7 @@ pub fn display_end_of_table(rows: Vec<String>) {
 
 pub fn clear_screen() {
     // Clean and get cursor back on top.
-    print!("{}", CLEAR_SCREEN);
+    print!("  {}", CLEAR_SCREEN);
 }
 
 pub fn get_user_password(
@@ -168,19 +168,23 @@ pub fn get_user_password(
 ) -> Result<(), Box<dyn ErrorTrait>> {
     // Ask the user for a password
     let mut password_is_correct = false;
+    
+    println!();
 
     while !password_is_correct {
-        *password = String::new();
-
+        let msg: String;
         if File::open(FILE_PATH).is_ok() {
-            println!("{}", ENTER_PASSWORD);
+            msg = format!("{}", ENTER_PASSWORD);
         } else {
-            println!("{}", ENTER_NEW_PASSWORD);
+            msg = format!("{}", ENTER_NEW_PASSWORD);
         }
 
-        std::io::stdin().read_line(password)?;
+        *password = Password::with_theme(&ColorfulTheme::default())
+            .with_prompt(msg)
+            .interact()
+            .unwrap();
 
-        println!("{}", CHECKING_PASSWORD);
+        println!("\n  {}", CHECKING_PASSWORD);
 
         clear_screen();
 
@@ -190,7 +194,7 @@ pub fn get_user_password(
                 *entries = found_entries;
             }
             Err(_) => {
-                println!("{}", INVALID_PASSWORD);
+                println!("\n  {}\n", INVALID_PASSWORD);
                 continue;
             }
         };
@@ -202,7 +206,7 @@ pub fn add_first_entry(
     entries: &mut Vec<Entry>,
     password: &mut String,
 ) -> Result<(), Box<dyn ErrorTrait>> {
-    println!("{}", NO_PASSWORD);
+    println!("  {}", NO_PASSWORD);
 
     entries.push(add_a_new_entry());
 
