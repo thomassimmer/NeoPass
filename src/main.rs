@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     loop {
         clear_screen();
 
-        println!("{}", INSTRUCTIONS);
+        println!("  {}", INSTRUCTIONS);
 
         if entries.is_empty() {
             add_first_entry(&mut entries, &mut password)?;
@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
 
         if copied_item.is_some() {
-            println!("{}", PASSWORD_COPIED);
+            println!("  {}", PASSWORD_COPIED);
         }
 
         let mut rows = build_rows(&entries);
