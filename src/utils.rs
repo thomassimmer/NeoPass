@@ -1,5 +1,6 @@
 use clipboard::{ClipboardContext, ClipboardProvider};
 use cocoon::Cocoon;
+use console::Term;
 use std::io::{Error, ErrorKind};
 use std::{error::Error as ErrorTrait, fs::File};
 use tabled::settings::object::Rows;
@@ -77,9 +78,17 @@ pub fn encrypt_file(contents: String, password: &str) -> Result<(), Box<dyn Erro
     Ok(())
 }
 
+pub fn clear_instructions() -> Result<(), Error> {
+    Term::stderr().clear_last_lines(INSTRUCTIONS.chars().filter(|&x| x == '\n').count() + 1)
+}
+
+pub fn clear_copied_password_msg() -> Result<(), Error> {
+    Term::stderr().clear_last_lines(PASSWORD_COPIED.chars().filter(|&x| x == '\n').count() + 2)
+}
+
 pub fn clear_screen() {
     // Clean and get cursor back on top.
-    print!("  {}", CLEAR_SCREEN);
+    print!("{}", CLEAR_SCREEN);
 }
 
 pub fn display_instructions() {
@@ -113,19 +122,20 @@ pub fn get_user_password(
 
         println!("\n  {}", CHECKING_PASSWORD);
 
-        clear_screen();
-
         match decrypt_file(password) {
             Ok(found_entries) => {
+                Term::stdout().clear_last_lines(6)?;
                 password_is_correct = true;
                 *entries = found_entries;
             }
             Err(_) => {
+                Term::stderr().clear_last_lines(6)?;
                 println!("\n  {}\n", INVALID_PASSWORD);
                 continue;
             }
         };
     }
+
     Ok(())
 }
 
@@ -133,10 +143,12 @@ pub fn add_first_entry(
     entries: &mut Vec<Entry>,
     password: &mut str,
 ) -> Result<(), Box<dyn ErrorTrait>> {
-    println!("  {}", NO_PASSWORD);
+    println!("\n  {}", NO_PASSWORD);
 
     add_a_new_entry(entries);
     write_entries_in_file(entries, password)?;
+
+    Term::stderr().clear_last_lines(NO_PASSWORD.chars().filter(|&x| x == '\n').count() + 6)?;
 
     Ok(())
 }

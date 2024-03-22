@@ -3,8 +3,9 @@ use dialoguer::theme::ColorfulTheme;
 use neopass::entry::{add_a_new_entry, modify_entry};
 use neopass::select::{Select, SelectOutput};
 use neopass::utils::{
-    add_first_entry, build_rows, clear_screen, display_instructions, display_password_copied,
-    get_user_password, set_password_in_clipboard, write_entries_in_file,
+    add_first_entry, build_rows, clear_copied_password_msg, clear_instructions, clear_screen,
+    display_instructions, display_password_copied, get_user_password, set_password_in_clipboard,
+    write_entries_in_file,
 };
 use std::error::Error;
 
@@ -18,13 +19,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut copied_item = None;
 
     loop {
-        clear_screen();
-        display_instructions();
-
         if entries.is_empty() {
             add_first_entry(&mut entries, &mut password)?;
             continue;
         }
+
+        display_instructions();
 
         if copied_item.is_some() {
             display_password_copied();
@@ -57,10 +57,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                 // User selected one item.
                 SelectOutput::Copy(index) => {
                     set_password_in_clipboard(&entries, index, &mut copied_item)?;
+                    clear_copied_password_msg()?;
                 }
 
                 // User wants to add a new item.
                 SelectOutput::Add => {
+                    clear_instructions()?;
                     add_a_new_entry(&mut entries);
                     write_entries_in_file(&entries, &password)?;
                 }
@@ -73,11 +75,14 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                 // User wants to modify one item.
                 SelectOutput::Modify(index) => {
+                    clear_instructions()?;
                     modify_entry(&mut entries, index);
                     write_entries_in_file(&entries, &password)?;
                 }
             }
+            clear_instructions()?;
         } else {
+            clear_instructions()?;
             return Ok(());
         }
     }

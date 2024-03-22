@@ -29,6 +29,8 @@ pub fn generate_password(length: usize) -> String {
 }
 
 pub fn add_a_new_entry(entries: &mut Vec<Entry>) {
+    println!();
+
     let application: String = Input::with_theme(&ColorfulTheme::default())
         .with_prompt("  Application / Website:")
         .interact_text()
@@ -57,6 +59,8 @@ pub fn add_a_new_entry(entries: &mut Vec<Entry>) {
 }
 
 pub fn modify_entry(entries: &mut [Entry], index: usize) {
+    println!();
+
     let entry = &entries[index];
 
     let application: String = Input::with_theme(&ColorfulTheme::default())
