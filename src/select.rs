@@ -1,15 +1,12 @@
-// Three changes were made in this file so we could send back specific events
-// to main in case of deletion, copy, or addition.
-use std::cmp::min;
+// Four changes were made in this file so we could send back specific events
+// to main in case of deletion, edit, copy, or addition.
 use std::{io, ops::Rem};
 
 use console::{Key, Term};
+use dialoguer::theme::{SimpleTheme, Theme};
 use dialoguer::Result;
 
-use crate::{
-    paging::Paging,
-    theme::{custom_colorful_theme::ColorfulTheme, render::TermThemeRenderer},
-};
+use crate::{paging::Paging, render::TermThemeRenderer};
 
 // THIS IS NEW.
 #[derive(Debug)]
@@ -25,28 +22,30 @@ pub enum SelectOutput {
 /// User can select from one or more options.
 /// Interaction returns index of an item selected in the order they appear in `item` invocation or `items` slice.
 #[derive(Clone)]
-pub struct Select {
+pub struct Select<'a> {
     default: usize,
     items: Vec<String>,
     prompt: Option<String>,
     report: bool,
     clear: bool,
-    theme: ColorfulTheme,
+    theme: &'a dyn Theme,
     max_length: Option<usize>,
 }
 
-impl Default for Select {
+impl Default for Select<'static> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Select {
+impl Select<'static> {
     /// Creates a select prompt with default theme.
     pub fn new() -> Self {
-        Self::with_theme(ColorfulTheme::default())
+        Self::with_theme(&SimpleTheme)
     }
+}
 
+impl Select<'_> {
     /// Indicates whether select menu should be erased from the screen after interaction.
     ///
     /// The default is to clear the menu.
@@ -179,6 +178,8 @@ impl Select {
                 paging.render_prompt(|paging_info| render.select_prompt(prompt, paging_info))?;
             }
 
+            render.header()?;
+
             for (idx, item) in self
                 .items
                 .iter()
@@ -186,12 +187,10 @@ impl Select {
                 .skip(paging.current_page * paging.capacity)
                 .take(paging.capacity)
             {
-                render.select_prompt_item(
-                    item,
-                    sel == idx,
-                    idx == min(self.items.len(), paging.capacity) - 1,
-                )?;
+                render.select_prompt_item(item, sel == idx)?;
             }
+
+            render.footer()?;
 
             term.flush()?;
 
@@ -250,6 +249,7 @@ impl Select {
                     term.show_cursor()?;
                     term.flush()?;
 
+                    // THIS IS NEW.
                     return Ok(Some(SelectOutput::Copy(sel)));
                 }
                 // THIS IS NEW.
@@ -297,9 +297,11 @@ impl Select {
             }
         }
     }
+}
 
+impl<'a> Select<'a> {
     /// Creates a select prompt with a specific theme.
-    pub fn with_theme(theme: ColorfulTheme) -> Self {
+    pub fn with_theme(theme: &'a dyn Theme) -> Self {
         Self {
             default: !0,
             items: vec![],

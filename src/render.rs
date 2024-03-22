@@ -3,24 +3,22 @@
 
 use std::{fmt, io};
 
-use console::Term;
+use console::{measure_text_width, Term};
 use dialoguer::{theme::Theme, Result};
 #[cfg(feature = "fuzzy-select")]
 use fuzzy_matcher::skim::SkimMatcherV2;
 
-use super::custom_colorful_theme::ColorfulTheme;
-
 /// Helper struct to conveniently render a theme.
 pub(crate) struct TermThemeRenderer<'a> {
     term: &'a Term,
-    theme: ColorfulTheme,
+    theme: &'a dyn Theme,
     height: usize,
     prompt_height: usize,
     prompts_reset_height: bool,
 }
 
 impl<'a> TermThemeRenderer<'a> {
-    pub fn new(term: &'a Term, theme: ColorfulTheme) -> TermThemeRenderer<'a> {
+    pub fn new(term: &'a Term, theme: &'a dyn Theme) -> TermThemeRenderer<'a> {
         TermThemeRenderer {
             term,
             theme,
@@ -28,6 +26,20 @@ impl<'a> TermThemeRenderer<'a> {
             prompt_height: 0,
             prompts_reset_height: true,
         }
+    }
+
+    fn write_formatted_str<
+        F: FnOnce(&mut TermThemeRenderer, &mut dyn fmt::Write) -> fmt::Result,
+    >(
+        &mut self,
+        f: F,
+    ) -> Result<usize> {
+        let mut buf = String::new();
+        f(self, &mut buf).map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
+        self.height += buf.chars().filter(|&x| x == '\n').count();
+        // println!("str - height: {}", self.height);
+        self.term.write_str(&buf)?;
+        Ok(measure_text_width(&buf))
     }
 
     fn write_formatted_line<
@@ -39,6 +51,7 @@ impl<'a> TermThemeRenderer<'a> {
         let mut buf = String::new();
         f(self, &mut buf).map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
         self.height += buf.chars().filter(|&x| x == '\n').count() + 1;
+        // println!("line - height: {}", self.height);
         Ok(self.term.write_line(&buf)?)
     }
 
@@ -60,34 +73,6 @@ impl<'a> TermThemeRenderer<'a> {
         write!(buf, " [Page {}/{}] ", paging_info.0, paging_info.1)
     }
 
-    #[cfg(feature = "fuzzy-select")]
-    pub fn fuzzy_select_prompt(
-        &mut self,
-        prompt: &str,
-        search_term: &str,
-        cursor_pos: usize,
-    ) -> Result {
-        self.write_formatted_prompt(|this, buf| {
-            this.theme
-                .format_fuzzy_select_prompt(buf, prompt, search_term, cursor_pos)
-        })
-    }
-
-    #[cfg(feature = "password")]
-    pub fn password_prompt(&mut self, prompt: &str) -> Result<usize> {
-        self.write_formatted_str(|this, buf| {
-            write!(buf, "\r")?;
-            this.theme.format_password_prompt(buf, prompt)
-        })
-    }
-
-    #[cfg(feature = "password")]
-    pub fn password_prompt_selection(&mut self, prompt: &str) -> Result {
-        self.write_formatted_prompt(|this, buf| {
-            this.theme.format_password_prompt_selection(buf, prompt)
-        })
-    }
-
     pub fn select_prompt(&mut self, prompt: &str, paging_info: Option<(usize, usize)>) -> Result {
         self.write_formatted_prompt(|this, buf| {
             this.theme.format_select_prompt(buf, prompt)?;
@@ -106,36 +91,9 @@ impl<'a> TermThemeRenderer<'a> {
         })
     }
 
-    pub fn select_prompt_item(
-        &mut self,
-        text: &str,
-        active: bool,
-        last: bool,
-    ) -> Result {
+    pub fn select_prompt_item(&mut self, text: &str, active: bool) -> Result {
         self.write_formatted_line(|this, buf| {
-            this.theme
-                .format_select_prompt_item(buf, text, active, last)
-        })
-    }
-
-    #[cfg(feature = "fuzzy-select")]
-    pub fn fuzzy_select_prompt_item(
-        &mut self,
-        text: &str,
-        active: bool,
-        highlight: bool,
-        matcher: &SkimMatcherV2,
-        search_term: &str,
-    ) -> Result {
-        self.write_formatted_line(|this, buf| {
-            this.theme.format_fuzzy_select_prompt_item(
-                buf,
-                text,
-                active,
-                highlight,
-                matcher,
-                search_term,
-            )
+            this.theme.format_select_prompt_item(buf, text, active)
         })
     }
 
@@ -162,5 +120,13 @@ impl<'a> TermThemeRenderer<'a> {
         self.term.clear_last_lines(new_height)?;
         self.height = 0;
         Ok(())
+    }
+
+    pub fn header(&mut self) -> Result<usize> {
+        self.write_formatted_str(|this, buf| this.theme.format_header(buf))
+    }
+
+    pub fn footer(&mut self) -> Result<usize> {
+        self.write_formatted_str(|this, buf| this.theme.format_footer(buf))
     }
 }
