@@ -1,9 +1,10 @@
-use neopass::custom_select::{Select, SelectOutput};
+use console::style;
+use dialoguer::theme::ColorfulTheme;
 use neopass::entry::{add_a_new_entry, modify_entry};
-use neopass::theme::custom_colorful_theme::ColorfulTheme;
+use neopass::select::{Select, SelectOutput};
 use neopass::utils::{
-    add_first_entry, build_rows, clear_screen, display_end_of_table, display_instructions,
-    display_password_copied, get_user_password, set_password_in_clipboard, write_entries_in_file,
+    add_first_entry, build_rows, clear_screen, display_instructions, display_password_copied,
+    get_user_password, set_password_in_clipboard, write_entries_in_file,
 };
 use std::error::Error;
 
@@ -29,16 +30,25 @@ fn main() -> Result<(), Box<dyn Error>> {
             display_password_copied();
         }
 
-        let rows = build_rows(&entries);
+        let mut rows = build_rows(&entries);
+
+        let header = format!(
+            "  {}\n  {}\n  {}",
+            rows.remove(0),
+            rows.remove(0),
+            rows.remove(0)
+        );
+        let footer = format!("  {}\n", rows.remove(rows.len() - 1));
         let theme = ColorfulTheme {
-            last_line: rows[rows.len() - 1].to_string(),
+            header: style(header).for_stderr(),
+            footer: style(footer).for_stderr(),
             ..Default::default()
         };
 
         // Display entries.
-        if let Some(selection) = Select::with_theme(theme)
+        if let Some(selection) = Select::with_theme(&theme)
             .default(copied_item.unwrap_or_default())
-            .items(&rows[..rows.len() - 1])
+            .items(&rows)
             .interact_opt()?
         {
             copied_item = None;
@@ -51,7 +61,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                 // User wants to add a new item.
                 SelectOutput::Add => {
-                    display_end_of_table(rows);
                     add_a_new_entry(&mut entries);
                     write_entries_in_file(&entries, &password)?;
                 }
@@ -64,13 +73,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                 // User wants to modify one item.
                 SelectOutput::Modify(index) => {
-                    display_end_of_table(rows);
                     modify_entry(&mut entries, index);
                     write_entries_in_file(&entries, &password)?;
                 }
             }
         } else {
-            display_end_of_table(rows);
             return Ok(());
         }
     }

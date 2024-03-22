@@ -77,14 +77,6 @@ pub fn encrypt_file(contents: String, password: &str) -> Result<(), Box<dyn Erro
     Ok(())
 }
 
-pub fn display_end_of_table(rows: Vec<String>) {
-    // Print the rest of the table. It's cleaner.
-    for row in &rows {
-        println!("  {}", row);
-    }
-    println!();
-}
-
 pub fn clear_screen() {
     // Clean and get cursor back on top.
     print!("  {}", CLEAR_SCREEN);
@@ -163,15 +155,10 @@ pub fn build_rows(entries: &[Entry]) -> Vec<String> {
     let table_as_string = table.to_string();
 
     // Get table rows so we can make them selectable.
-    let mut rows: Vec<String> = table_as_string
+    let rows: Vec<String> = table_as_string
         .split('\n')
         .map(|e| e.into())
         .collect::<Vec<String>>();
-
-    // Display table header.
-    println!("  {}", rows.remove(0));
-    println!("  {}", rows.remove(0));
-    println!("  {}", rows.remove(0));
 
     rows
 }
