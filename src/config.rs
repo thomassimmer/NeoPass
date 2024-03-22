@@ -15,4 +15,4 @@ Press Enter or Space to copy the password in your clipboard.\n  \
 Use 'q' or Ctrl + C to quit.\n";
 pub const INVALID_PASSWORD: &str = "❌ Invalid password.";
 pub const CHECKING_PASSWORD: &str = "Checking...";
-pub const NO_PASSWORD: &str = "You do not have credentials yet. Add one:\n";
+pub const NO_PASSWORD: &str = "You do not have credentials yet. Add one:";
