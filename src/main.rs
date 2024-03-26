@@ -1,26 +1,29 @@
 use console::style;
 use dialoguer::theme::ColorfulTheme;
+use neopass::config::INACTIVITY_DELAY;
 use neopass::entry::{add_a_new_entry, modify_entry};
 use neopass::select::{Select, SelectOutput};
 use neopass::utils::{
-    add_first_entry, build_rows, clear_copied_password_msg, clear_instructions, clear_screen,
-    display_instructions, display_password_copied, get_user_password, set_password_in_clipboard,
-    write_entries_in_file,
+    add_first_entry, build_rows, clear_screen, display_instructions, display_password_copied,
+    get_user_password, set_password_in_clipboard, write_entries_in_file,
 };
 use std::error::Error;
+use std::time::{Duration, Instant};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut password = String::new();
     let mut entries = Vec::new();
 
-    clear_screen();
+    clear_screen()?;
     get_user_password(&mut entries, &mut password)?;
 
     let mut copied_item = None;
+    let mut _last_activity = Instant::now();
 
     loop {
         if entries.is_empty() {
             add_first_entry(&mut entries, &mut password)?;
+            _last_activity = Instant::now();
             continue;
         }
 
@@ -45,6 +48,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             ..Default::default()
         };
 
+        // Reset the timer on user activity
+        _last_activity = Instant::now();
+
         // Display entries.
         if let Some(selection) = Select::with_theme(&theme)
             .default(copied_item.unwrap_or_default())
@@ -53,16 +59,22 @@ fn main() -> Result<(), Box<dyn Error>> {
         {
             copied_item = None;
 
+            // Check if INACTIVITY_DELAY seconds have elapsed since the last activity
+            if _last_activity.elapsed() >= Duration::from_secs(INACTIVITY_DELAY) {
+                clear_screen()?;
+                get_user_password(&mut entries, &mut password)?;
+                _last_activity = Instant::now();
+            }
+
             match selection {
                 // User selected one item.
                 SelectOutput::Copy(index) => {
                     set_password_in_clipboard(&entries, index, &mut copied_item)?;
-                    clear_copied_password_msg()?;
                 }
 
                 // User wants to add a new item.
                 SelectOutput::Add => {
-                    clear_instructions()?;
+                    clear_screen()?;
                     add_a_new_entry(&mut entries);
                     write_entries_in_file(&entries, &password)?;
                 }
@@ -75,15 +87,14 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                 // User wants to modify one item.
                 SelectOutput::Modify(index) => {
-                    clear_instructions()?;
+                    clear_screen()?;
                     modify_entry(&mut entries, index);
                     write_entries_in_file(&entries, &password)?;
                 }
             }
-            clear_instructions()?;
         } else {
-            clear_instructions()?;
             return Ok(());
         }
+        clear_screen()?;
     }
 }
