@@ -10,8 +10,8 @@ use tabled::Table;
 use dialoguer::{theme::ColorfulTheme, Password};
 
 use crate::config::{
-    CHECKING_PASSWORD, CLEAR_SCREEN, ENTER_NEW_PASSWORD, ENTER_PASSWORD, INSTRUCTIONS,
-    INVALID_PASSWORD, NO_PASSWORD, PASSWORD_COPIED,
+    CHECKING_PASSWORD, ENTER_NEW_PASSWORD, ENTER_PASSWORD, INSTRUCTIONS, INVALID_PASSWORD,
+    NO_PASSWORD, PASSWORD_COPIED,
 };
 use crate::entry::add_a_new_entry;
 use crate::{config::FILE_PATH, entry::Entry};
@@ -78,17 +78,9 @@ pub fn encrypt_file(contents: String, password: &str) -> Result<(), Box<dyn Erro
     Ok(())
 }
 
-pub fn clear_instructions() -> Result<(), Error> {
-    Term::stderr().clear_last_lines(INSTRUCTIONS.chars().filter(|&x| x == '\n').count() + 1)
-}
-
-pub fn clear_copied_password_msg() -> Result<(), Error> {
-    Term::stderr().clear_last_lines(PASSWORD_COPIED.chars().filter(|&x| x == '\n').count() + 2)
-}
-
-pub fn clear_screen() {
+pub fn clear_screen() -> Result<(), Error> {
     // Clean and get cursor back on top.
-    print!("{}", CLEAR_SCREEN);
+    Term::stderr().clear_last_lines(30)
 }
 
 pub fn display_instructions() {

@@ -16,3 +16,4 @@ Use 'q' or Ctrl + C to quit.\n";
 pub const INVALID_PASSWORD: &str = "❌ Invalid password.";
 pub const CHECKING_PASSWORD: &str = "Checking...";
 pub const NO_PASSWORD: &str = "You do not have credentials yet. Add one:";
+pub const INACTIVITY_DELAY: u64 = 5 * 60;
