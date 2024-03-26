@@ -2,6 +2,7 @@ use console::style;
 use dialoguer::theme::ColorfulTheme;
 use neopass::config::INACTIVITY_DELAY;
 use neopass::entry::{add_a_new_entry, modify_entry};
+use neopass::languages::{read_locales, select_language};
 use neopass::select::{Select, SelectOutput};
 use neopass::utils::{
     add_first_entry, build_rows, clear_screen, display_instructions, display_password_copied,
@@ -11,6 +12,8 @@ use std::error::Error;
 use std::time::{Duration, Instant};
 
 fn main() -> Result<(), Box<dyn Error>> {
+    read_locales();
+
     let mut password = String::new();
     let mut entries = Vec::new();
 
@@ -90,6 +93,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                     clear_screen()?;
                     modify_entry(&mut entries, index);
                     write_entries_in_file(&entries, &password)?;
+                }
+
+                // Users wants to change the language.
+                SelectOutput::ChangeLanguage => {
+                    clear_screen()?;
+                    select_language()?;
                 }
             }
         } else {

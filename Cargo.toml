@@ -12,3 +12,5 @@ tabled = "0.15.0"
 dialoguer = { git = "https://github.com/thomassimmer/dialoguer.git", branch ="add-footer-and-header" }
 console = "0.15.0"
 cocoon = "0.4.1"
+lazy_static = "1.4.0"
+serde_json = "1.0.41"

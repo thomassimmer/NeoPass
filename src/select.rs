@@ -15,6 +15,7 @@ pub enum SelectOutput {
     Add,
     Delete(usize),
     Modify(usize),
+    ChangeLanguage,
 }
 
 /// Renders a select prompt.
@@ -216,7 +217,7 @@ impl Select<'_> {
                         return Ok(None);
                     }
                 }
-                Key::ArrowUp | Key::BackTab | Key::Char('k') => {
+                Key::ArrowUp | Key::BackTab => {
                     if sel == !0 {
                         sel = self.items.len() - 1;
                     } else {
@@ -224,12 +225,12 @@ impl Select<'_> {
                             % (self.items.len() as i64)) as usize;
                     }
                 }
-                Key::ArrowLeft | Key::Char('h') => {
+                Key::ArrowLeft => {
                     if paging.active {
                         sel = paging.previous_page();
                     }
                 }
-                Key::ArrowRight | Key::Char('l') => {
+                Key::ArrowRight => {
                     if paging.active {
                         sel = paging.next_page();
                     }
@@ -284,6 +285,17 @@ impl Select<'_> {
                     term.flush()?;
 
                     return Ok(Some(SelectOutput::Modify(sel)));
+                }
+                // THIS IS NEW.
+                Key::Char('l') | Key::Char('L') => {
+                    if self.clear {
+                        render.clear()?;
+                    }
+
+                    term.show_cursor()?;
+                    term.flush()?;
+
+                    return Ok(Some(SelectOutput::ChangeLanguage));
                 }
                 _ => {}
             }
