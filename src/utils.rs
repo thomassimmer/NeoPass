@@ -9,12 +9,9 @@ use tabled::Table;
 
 use dialoguer::{theme::ColorfulTheme, Password};
 
-use crate::config::{
-    CHECKING_PASSWORD, ENTER_NEW_PASSWORD, ENTER_PASSWORD, INSTRUCTIONS, INVALID_PASSWORD,
-    NO_PASSWORD, PASSWORD_COPIED,
-};
-use crate::entry::add_a_new_entry;
-use crate::{config::FILE_PATH, entry::Entry};
+use crate::config::FILE_PATH;
+use crate::entry::{add_a_new_entry, Entry};
+use crate::languages::get_translation;
 
 pub fn decrypt_file(password: &str) -> Result<Vec<Entry>, Box<dyn ErrorTrait>> {
     let mut entries = Vec::new();
@@ -84,11 +81,11 @@ pub fn clear_screen() -> Result<(), Error> {
 }
 
 pub fn display_instructions() {
-    println!("  {}", INSTRUCTIONS);
+    println!("\n  {}", get_translation("instructions"));
 }
 
 pub fn display_password_copied() {
-    println!("  {}", PASSWORD_COPIED);
+    println!("  {}", get_translation("password_copied"));
 }
 
 pub fn get_user_password(
@@ -102,9 +99,9 @@ pub fn get_user_password(
 
     while !password_is_correct {
         let msg: String = if File::open(FILE_PATH).is_ok() {
-            ENTER_PASSWORD.to_string()
+            get_translation("enter_password")
         } else {
-            ENTER_NEW_PASSWORD.to_string()
+            get_translation("enter_new_password")
         };
 
         *password = Password::with_theme(&ColorfulTheme::default())
@@ -112,7 +109,7 @@ pub fn get_user_password(
             .interact()
             .unwrap();
 
-        println!("\n  {}", CHECKING_PASSWORD);
+        println!("\n  {}", get_translation("checking_password"));
 
         match decrypt_file(password) {
             Ok(found_entries) => {
@@ -122,7 +119,7 @@ pub fn get_user_password(
             }
             Err(_) => {
                 Term::stderr().clear_last_lines(6)?;
-                println!("\n  {}\n", INVALID_PASSWORD);
+                println!("\n  {}\n", get_translation("invalid_password"));
                 continue;
             }
         };
@@ -135,12 +132,10 @@ pub fn add_first_entry(
     entries: &mut Vec<Entry>,
     password: &mut str,
 ) -> Result<(), Box<dyn ErrorTrait>> {
-    println!("\n  {}", NO_PASSWORD);
+    println!("\n  {}", get_translation("no_password"));
 
     add_a_new_entry(entries);
     write_entries_in_file(entries, password)?;
-
-    Term::stderr().clear_last_lines(NO_PASSWORD.chars().filter(|&x| x == '\n').count() + 6)?;
 
     Ok(())
 }
