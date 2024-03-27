@@ -11,6 +11,7 @@ NeoPass is a command-line password management tool written in Rust. It's designe
 - Add, delete, and modify entries easily.
 - Copy passwords to the clipboard for easy pasting.
 - Ask for master password after 5 minutes of inactivity.
+- Ability to change the language of the application, with the selected language being saved and utilized upon subsequent launches of the app.
 
 ## Installation
 

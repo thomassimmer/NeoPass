@@ -116,7 +116,7 @@ pub fn get_user_password(
         };
 
         *password = Password::with_theme(&ColorfulTheme::default())
-            .with_prompt(msg)
+            .with_prompt(format!("  {}", msg))
             .interact()
             .unwrap();
 

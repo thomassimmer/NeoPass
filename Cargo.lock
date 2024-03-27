@@ -347,6 +347,7 @@ dependencies = [
  "dialoguer",
  "lazy_static",
  "rand",
+ "serde",
  "serde_json",
  "tabled",
 ]

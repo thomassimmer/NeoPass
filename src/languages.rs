@@ -4,7 +4,7 @@ use std::fs;
 
 use dialoguer::{theme::ColorfulTheme, Select};
 
-use crate::config::{LANGUAGE, LANGUAGES_AVAILABLE, TRANSLATIONS};
+use crate::config::{write_local_config, LANGUAGE, LANGUAGES_AVAILABLE, TRANSLATIONS};
 
 type Key = String;
 type Locale = String;
@@ -51,6 +51,7 @@ pub fn select_language() -> Result<(), Box<dyn Error>> {
         .interact_opt()?
     {
         *LANGUAGE.lock().unwrap() = LANGUAGES_AVAILABLE[selection].code.to_string();
+        write_local_config()?;
     } else {
         return Ok(());
     }

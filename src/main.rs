@@ -1,6 +1,6 @@
 use console::style;
 use dialoguer::theme::ColorfulTheme;
-use neopass::config::INACTIVITY_DELAY;
+use neopass::config::{read_local_config, INACTIVITY_DELAY};
 use neopass::entry::{add_a_new_entry, modify_entry};
 use neopass::languages::{read_locales, select_language};
 use neopass::select::{Select, SelectOutput};
@@ -12,6 +12,7 @@ use std::error::Error;
 use std::time::{Duration, Instant};
 
 fn main() -> Result<(), Box<dyn Error>> {
+    read_local_config()?;
     read_locales();
 
     let mut password = String::new();
@@ -27,6 +28,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         if entries.is_empty() {
             add_first_entry(&mut entries, &mut password)?;
             _last_activity = Instant::now();
+            clear_screen()?;
             continue;
         }
 
