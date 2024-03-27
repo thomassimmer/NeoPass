@@ -4,7 +4,7 @@ use console::Term;
 use std::io::{Error, ErrorKind};
 use std::{error::Error as ErrorTrait, fs::File};
 use tabled::settings::object::Rows;
-use tabled::settings::{Alignment, Style};
+use tabled::settings::{Alignment, Disable, Style};
 use tabled::Table;
 
 use dialoguer::{theme::ColorfulTheme, Password};
@@ -81,7 +81,18 @@ pub fn clear_screen() -> Result<(), Error> {
 }
 
 pub fn display_instructions() {
-    println!("\n  {}", get_translation("instructions"));
+    let mut table = Table::new([
+        ["  ↓     ", &get_translation("down_arrow")],
+        ["  ↑     ", &get_translation("up_arrow")],
+        ["  a     ", &get_translation("add_entry")],
+        ["  d     ", &get_translation("delete_entry")],
+        ["  e     ", &get_translation("edit_entry")],
+        ["  Space ", &get_translation("copy_password")],
+        ["  l     ", &get_translation("change_language")],
+    ]);
+    table.with(Style::blank()).with(Disable::row(Rows::first()));
+    println!("\n  {}\n", get_translation("commands"));
+    println!("{}\n", table);
 }
 
 pub fn display_password_copied() {
@@ -147,6 +158,7 @@ pub fn build_rows(entries: &[Entry]) -> Vec<String> {
         username: e.username.clone(),
         password: "********".to_string(),
     }));
+
     let table = table
         .with(Style::rounded())
         .modify(Rows::new(1..), Alignment::left());

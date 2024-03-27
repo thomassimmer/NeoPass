@@ -26,6 +26,22 @@ cargo run
 
 On the first run, you'll be prompted to choose a master password. This password will be used to encrypt and decrypt your password entries.
 
+## Commands
+
+- **↓**: Use this command to move the selection cursor down by one line in the list of entries.
+
+- **↑**: Use this command to move the selection cursor up by one line in the list of entries.
+
+- **a**: This command allows you to add a new entry to the list. You'll be prompted to provide details such as the application or website name, username or email, and password.
+
+- **d**: Use this command to delete the currently selected entry from the list.
+
+- **e**: This command enables you to edit the details of the currently selected entry, such as the application or website name, username or email, and password.
+
+- **Space**: Pressing the Spacebar will copy the password of the currently selected entry to your clipboard, allowing for easy pasting into other applications.
+
+- **l**: Use this command to change the language settings of the tool.
+
 ## Contributing
 
 We welcome contributions from the community. If you encounter any issues or have a feature request, please open an issue on our GitHub repository. If you'd like to contribute, feel free to submit a pull request.

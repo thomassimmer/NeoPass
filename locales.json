@@ -11,10 +11,6 @@
         "en": "✅ Copied password to clipboard.\n",
         "fr": "✅ Mot de passe copié dans le presse-papiers.\n"
     },
-    "instructions": {
-        "en": "Use ↑ and ↓ arrows to navigate between entries.\n  Press 'a' or 'A' to add a new entry.\n  Press 'm' or 'M' to modify an entry.\n  Press 'd', 'D' or Del to delete an entry.\n  Press Enter or Space to copy the password to your clipboard.\n  Press 'l' or 'L' to change the language.\n  Use 'q' or Ctrl + C to quit.\n",
-        "fr": "Utilisez les flèches ↑ et ↓ pour naviguer entre les entrées.\n  Appuyez sur 'a' ou 'A' pour ajouter une nouvelle entrée.\n  Appuyez sur 'm' ou 'M' pour modifier une entrée.\n  Appuyez sur 'd', 'D' ou Suppr pour supprimer une entrée.\n  Appuyez sur Entrée ou Espace pour copier le mot de passe dans votre presse-papiers.\n  Appuyez sur 'l' ou 'L' pour changer de langue.\n  Utilisez 'q' ou Ctrl + C pour quitter.\n"
-    },
     "invalid_password": {
         "en": "❌ Invalid password.",
         "fr": "❌ Mot de passe invalide."
@@ -38,5 +34,37 @@
     "password": {
         "en": "Password",
         "fr": "Mot de passe"
+    },
+    "down_arrow": {
+        "en": "Move one line down",
+        "fr": "Descendre d'une ligne"
+    },
+    "up_arrow": {
+        "en": "Move one line up",
+        "fr": "Monter d'une ligne"
+    },
+    "add_entry": {
+        "en": "Add a new entry",
+        "fr": "Ajouter une nouvelle entrée"
+    },
+    "edit_entry": {
+        "en": "Edit an entry",
+        "fr": "Modifier une entrée"
+    },
+    "delete_entry": {
+        "en": "Delete a entry",
+        "fr": "Supprimer une entrée"
+    },
+    "copy_password": {
+        "en": "Copy the entry's password to your clipboard",
+        "fr": "Copier le mot de passe de l'entrée dans votre presse-papiers"
+    },
+    "change_language": {
+        "en": "Change the language",
+        "fr": "Changer de langue"
+    },
+    "commands": {
+        "en": "Commands:",
+        "fr": "Commandes :"
     }
 }

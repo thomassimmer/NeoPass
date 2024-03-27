@@ -14,7 +14,7 @@ pub enum SelectOutput {
     Copy(usize),
     Add,
     Delete(usize),
-    Modify(usize),
+    Edit(usize),
     ChangeLanguage,
 }
 
@@ -236,7 +236,7 @@ impl Select<'_> {
                     }
                 }
 
-                Key::Enter | Key::Char(' ') if sel != !0 => {
+                Key::Char(' ') if sel != !0 => {
                     if self.clear {
                         render.clear()?;
                     }
@@ -276,7 +276,7 @@ impl Select<'_> {
                     return Ok(Some(SelectOutput::Delete(sel)));
                 }
                 // THIS IS NEW.
-                Key::Char('m') | Key::Char('M') if sel != !0 => {
+                Key::Char('e') | Key::Char('E') if sel != !0 => {
                     if self.clear {
                         render.clear()?;
                     }
@@ -284,7 +284,7 @@ impl Select<'_> {
                     term.show_cursor()?;
                     term.flush()?;
 
-                    return Ok(Some(SelectOutput::Modify(sel)));
+                    return Ok(Some(SelectOutput::Edit(sel)));
                 }
                 // THIS IS NEW.
                 Key::Char('l') | Key::Char('L') => {

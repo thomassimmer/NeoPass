@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
 
                 // User wants to modify one item.
-                SelectOutput::Modify(index) => {
+                SelectOutput::Edit(index) => {
                     clear_screen()?;
                     modify_entry(&mut entries, index);
                     write_entries_in_file(&entries, &password)?;
