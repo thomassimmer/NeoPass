@@ -1,18 +1,39 @@
+use std::borrow::Cow;
+
 use rand::{thread_rng, Rng};
 use tabled::Tabled;
 
 use dialoguer::{theme::ColorfulTheme, Input, Password};
 
-use crate::config::{PASSWORD_LENGTH, SYMBOLS_TO_USE_IN_PASSWORDS};
+use crate::{
+    config::{PASSWORD_LENGTH, SYMBOLS_TO_USE_IN_PASSWORDS},
+    languages::get_translation,
+};
 
-#[derive(Debug, Tabled)]
+#[derive(Debug)]
 pub struct Entry {
-    #[tabled(rename = "Application / Website")]
     pub application: String,
-    #[tabled(rename = "Username / Email")]
     pub username: String,
-    #[tabled(rename = "Password")]
     pub password: String,
+}
+
+impl Tabled for Entry {
+    const LENGTH: usize = 3;
+
+    fn fields(&self) -> Vec<Cow<'_, str>> {
+        vec![
+            Cow::Borrowed(&self.application),
+            Cow::Borrowed(&self.username),
+            Cow::Borrowed(&self.password),
+        ]
+    }
+    fn headers() -> Vec<Cow<'static, str>> {
+        vec![
+            Cow::Owned(get_translation("application_website")),
+            Cow::Owned(get_translation("username_email")),
+            Cow::Owned(get_translation("password")),
+        ]
+    }
 }
 
 pub fn generate_password(length: usize) -> String {

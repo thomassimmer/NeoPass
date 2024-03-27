@@ -26,5 +26,17 @@
     "no_password": {
         "en": "You do not have credentials yet. Add one:",
         "fr": "Vous n'avez pas encore de mot de passe. Ajoutez-en un :"
+    },
+    "application_website": {
+        "en": "Application / Website",
+        "fr": "Application / Site Internet"
+    },
+    "username_email": {
+        "en": "Username / Email",
+        "fr": "Username / Email"
+    },
+    "password": {
+        "en": "Password",
+        "fr": "Mot de passe"
     }
 }
