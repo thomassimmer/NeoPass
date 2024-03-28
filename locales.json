@@ -1,11 +1,19 @@
 {
-    "enter_new_password": {
+    "enter_password_first_time": {
         "en": "Enter a master password:",
         "fr": "Entrez un mot de passe principal :"
     },
     "enter_password": {
         "en": "Enter your master password:",
         "fr": "Entrez votre mot de passe principal :"
+    },
+    "enter_new_password": {
+        "en": "Enter a new master password:",
+        "fr": "Entrez un nouveau mot de passe principal :"
+    },
+    "master_password_changed": {
+        "en": "✅ Your master password was changed.",
+        "fr": "✅ Votre mot de passe a bien été changé."
     },
     "password_copied": {
         "en": "✅ Copied password to clipboard.\n",
@@ -62,6 +70,10 @@
     "change_language": {
         "en": "Change the language",
         "fr": "Changer de langue"
+    },
+    "change_master_password": {
+        "en": "Change the master password",
+        "fr": "Changer le mot de passe principal"
     },
     "commands": {
         "en": "Commands:",

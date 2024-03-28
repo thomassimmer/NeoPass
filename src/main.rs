@@ -5,8 +5,8 @@ use neopass::entry::{add_a_new_entry, modify_entry};
 use neopass::languages::{read_locales, select_language};
 use neopass::select::{Select, SelectOutput};
 use neopass::utils::{
-    add_first_entry, build_rows, clear_screen, display_instructions, get_user_password,
-    set_password_in_clipboard, write_entries_in_file,
+    add_first_entry, build_rows, change_master_password, clear_screen, display_instructions,
+    display_password_change, get_user_password, set_password_in_clipboard, write_entries_in_file,
 };
 use std::error::Error;
 use std::time::{Duration, Instant};
@@ -22,6 +22,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     get_user_password(&mut entries, &mut password)?;
 
     let mut copied_item = None;
+    let mut has_changed_master_password = false;
     let mut _last_activity = Instant::now();
 
     loop {
@@ -31,6 +32,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             clear_screen()?;
             continue;
         }
+
+        display_password_change(&mut has_changed_master_password);
 
         display_instructions();
 
@@ -86,13 +89,21 @@ fn main() -> Result<(), Box<dyn Error>> {
                     write_entries_in_file(&entries, &password)?;
                 }
 
-                // Users wants to change the language.
+                // User wants to change the language.
                 SelectOutput::ChangeLanguage => {
                     clear_screen()?;
                     select_language()?;
                 }
+
+                // User wants to change the master password.
+                SelectOutput::ChangeMasterPassword => {
+                    clear_screen()?;
+                    change_master_password(&mut entries, &mut password)?;
+                    has_changed_master_password = true;
+                }
             }
         } else {
+            clear_screen()?;
             return Ok(());
         }
         clear_screen()?;

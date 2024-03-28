@@ -89,6 +89,7 @@ pub fn display_instructions() {
         ["  e     ", &get_translation("edit_entry")],
         ["  Space ", &get_translation("copy_password")],
         ["  l     ", &get_translation("change_language")],
+        ["  p     ", &get_translation("change_master_password")],
     ]);
     table.with(Style::blank()).with(Disable::row(Rows::first()));
     println!("\n  {}\n{}\n", get_translation("commands"), table);
@@ -107,7 +108,7 @@ pub fn get_user_password(
         let msg: String = if File::open(FILE_PATH).is_ok() {
             get_translation("enter_password")
         } else {
-            get_translation("enter_new_password")
+            get_translation("enter_password_first_time")
         };
 
         *password = Password::with_theme(&ColorfulTheme::default())
@@ -124,7 +125,7 @@ pub fn get_user_password(
                 *entries = found_entries;
             }
             Err(_) => {
-                Term::stderr().clear_last_lines(6)?;
+                clear_screen()?;
                 println!("\n  {}\n", get_translation("invalid_password"));
                 continue;
             }
@@ -200,4 +201,29 @@ pub fn set_password_in_clipboard(
     *copied_item = Some(index);
 
     Ok(())
+}
+
+pub fn change_master_password(
+    entries: &mut Vec<Entry>,
+    password: &mut String,
+) -> Result<(), Box<dyn ErrorTrait>> {
+    println!();
+
+    *password = Password::with_theme(&ColorfulTheme::default())
+        .with_prompt(format!("  {}", get_translation("enter_new_password")))
+        .interact()
+        .unwrap();
+
+    println!("\n  {}", get_translation("checking_password"));
+
+    write_entries_in_file(entries, password)?;
+
+    Ok(())
+}
+
+pub fn display_password_change(has_changed_master_password: &mut bool) {
+    if *has_changed_master_password {
+        println!("\n  {}", get_translation("master_password_changed"));
+        *has_changed_master_password = false;
+    }
 }

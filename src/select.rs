@@ -16,6 +16,7 @@ pub enum SelectOutput {
     Delete(usize),
     Edit(usize),
     ChangeLanguage,
+    ChangeMasterPassword,
 }
 
 /// Renders a select prompt.
@@ -296,6 +297,17 @@ impl Select<'_> {
                     term.flush()?;
 
                     return Ok(Some(SelectOutput::ChangeLanguage));
+                }
+                // THIS IS NEW.
+                Key::Char('p') | Key::Char('P') => {
+                    if self.clear {
+                        render.clear()?;
+                    }
+
+                    term.show_cursor()?;
+                    term.flush()?;
+
+                    return Ok(Some(SelectOutput::ChangeMasterPassword));
                 }
                 _ => {}
             }
