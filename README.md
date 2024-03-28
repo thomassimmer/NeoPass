@@ -1,6 +1,6 @@
-# NeoPass - A Simple Password Management Tool in Command Line
+# NeoPass
 
-NeoPass is a command-line password management tool written in Rust. It's designed to be simple, secure, and easy to use.
+NeoPass is a command-line **password manager** written in Rust. It's designed to be simple, secure, and easy to use.
 
 ![NeoPass](/docs/neopass.gif)
 
@@ -46,17 +46,15 @@ On the first run, you'll be prompted to choose a master password. This password 
 
 - **p**: Use this command to change the master password of the tool.
 
+## Support
+
+Please [open an issue](https://github.com/thomassimmer/NeoPass/issues/new/) for
+support.
 
 ## Contributing
 
-We welcome contributions from the community. If you encounter any issues or have a feature request, please open an issue on our GitHub repository. If you'd like to contribute, feel free to submit a pull request.
-
-Please make sure to follow coding standards and include appropriate tests and documentation for your changes.
+Please contribute using [Github Flow](https://guides.github.com/introduction/flow/). Create a branch, add commits, and [open a pull request](https://github.com/thomassimmer/NeoPass/compare).
 
 ## License
 
 NeoPass is released under the MIT License. See the LICENSE file for more details.
-
-## Contact
-
-If you have any questions or need further assistance, feel free to reach out to us.
