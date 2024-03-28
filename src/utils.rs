@@ -91,12 +91,7 @@ pub fn display_instructions() {
         ["  l     ", &get_translation("change_language")],
     ]);
     table.with(Style::blank()).with(Disable::row(Rows::first()));
-    println!("\n  {}\n", get_translation("commands"));
-    println!("{}\n", table);
-}
-
-pub fn display_password_copied() {
-    println!("  {}", get_translation("password_copied"));
+    println!("\n  {}\n{}\n", get_translation("commands"), table);
 }
 
 pub fn get_user_password(
@@ -151,7 +146,7 @@ pub fn add_first_entry(
     Ok(())
 }
 
-pub fn build_rows(entries: &[Entry]) -> Vec<String> {
+pub fn build_rows(entries: &[Entry], copied_item: &Option<usize>) -> (Vec<String>, String, String) {
     // Build table.
     let mut table = Table::new(entries.iter().map(|e| Entry {
         application: e.application.clone(),
@@ -166,12 +161,29 @@ pub fn build_rows(entries: &[Entry]) -> Vec<String> {
     let table_as_string = table.to_string();
 
     // Get table rows so we can make them selectable.
-    let rows: Vec<String> = table_as_string
+    let mut rows: Vec<String> = table_as_string
         .split('\n')
         .map(|e| e.into())
         .collect::<Vec<String>>();
 
-    rows
+    let header = format!(
+        "  {}\n  {}\n  {}",
+        rows.remove(0),
+        rows.remove(0),
+        rows.remove(0)
+    );
+
+    let footer = format!(
+        "  {}\n\n  {}",
+        rows.remove(rows.len() - 1),
+        if copied_item.is_some() {
+            get_translation("password_copied")
+        } else {
+            "".to_string()
+        }
+    );
+
+    (rows, header, footer)
 }
 
 pub fn set_password_in_clipboard(

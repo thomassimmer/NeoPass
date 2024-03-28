@@ -20,8 +20,8 @@
         "fr": "Vérification en cours..."
     },
     "no_password": {
-        "en": "You do not have credentials yet. Add one:",
-        "fr": "Vous n'avez pas encore de mot de passe. Ajoutez-en un :"
+        "en": "You do not have credentials yet.",
+        "fr": "Vous n'avez pas encore de mot de passe."
     },
     "application_website": {
         "en": "Application / Website",
@@ -66,5 +66,17 @@
     "commands": {
         "en": "Commands:",
         "fr": "Commandes :"
+    },
+    "add_a_new_entry": {
+        "en": "Add a new entry:",
+        "fr": "Ajoutez une nouvelle entrée :"
+    },
+    "edit_an_entry": {
+        "en": "Edit this entry:",
+        "fr": "Modifiez cette entrée :"
+    },
+    "select_language": {
+        "en": "Select a language:",
+        "fr": "Sélectionnez une langue :"
     }
 }

@@ -50,7 +50,7 @@ pub fn generate_password(length: usize) -> String {
 }
 
 pub fn add_a_new_entry(entries: &mut Vec<Entry>) {
-    println!();
+    println!("\n  {}\n", get_translation("add_a_new_entry"));
 
     let application: String = Input::with_theme(&ColorfulTheme::default())
         .with_prompt("  Application / Website:")
@@ -80,7 +80,7 @@ pub fn add_a_new_entry(entries: &mut Vec<Entry>) {
 }
 
 pub fn modify_entry(entries: &mut [Entry], index: usize) {
-    println!();
+    println!("\n  {}\n", get_translation("edit_an_entry"));
 
     let entry = &entries[index];
 

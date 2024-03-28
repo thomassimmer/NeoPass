@@ -5,8 +5,8 @@ use neopass::entry::{add_a_new_entry, modify_entry};
 use neopass::languages::{read_locales, select_language};
 use neopass::select::{Select, SelectOutput};
 use neopass::utils::{
-    add_first_entry, build_rows, clear_screen, display_instructions, display_password_copied,
-    get_user_password, set_password_in_clipboard, write_entries_in_file,
+    add_first_entry, build_rows, clear_screen, display_instructions, get_user_password,
+    set_password_in_clipboard, write_entries_in_file,
 };
 use std::error::Error;
 use std::time::{Duration, Instant};
@@ -34,19 +34,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         display_instructions();
 
-        if copied_item.is_some() {
-            display_password_copied();
-        }
+        let (rows, header, footer) = build_rows(&entries, &copied_item);
 
-        let mut rows = build_rows(&entries);
-
-        let header = format!(
-            "  {}\n  {}\n  {}",
-            rows.remove(0),
-            rows.remove(0),
-            rows.remove(0)
-        );
-        let footer = format!("  {}\n", rows.remove(rows.len() - 1));
         let theme = ColorfulTheme {
             header: style(header).for_stderr(),
             footer: style(footer).for_stderr(),

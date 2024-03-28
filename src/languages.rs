@@ -39,6 +39,8 @@ pub fn get_translation(key: &str) -> String {
 }
 
 pub fn select_language() -> Result<(), Box<dyn Error>> {
+    println!("\n  {}", get_translation("select_language"));
+
     let theme = ColorfulTheme::default();
 
     let current_language_index = LANGUAGES_AVAILABLE
