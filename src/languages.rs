@@ -49,7 +49,7 @@ pub fn select_language() -> Result<(), Box<dyn Error>> {
 
     if let Some(selection) = Select::with_theme(&theme)
         .default(current_language_index.unwrap_or_default())
-        .items(LANGUAGES_AVAILABLE.iter().map(|l| l.label.clone()))
+        .items(LANGUAGES_AVAILABLE.iter().map(|l| l.label))
         .interact_opt()?
     {
         *LANGUAGE.lock().unwrap() = LANGUAGES_AVAILABLE[selection].code.to_string();

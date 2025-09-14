@@ -29,7 +29,7 @@ pub fn read_local_config() -> Result<(), Box<dyn Error>> {
             language_code: &LANGUAGE.lock().unwrap(),
         };
         let contents = serde_json::to_string(&config)?;
-        file.write(contents.as_bytes())?;
+        file.write_all(contents.as_bytes())?;
     }
     Ok(())
 }
