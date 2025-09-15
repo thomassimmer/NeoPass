@@ -25,6 +25,15 @@ To run NeoPass, navigate to the project directory and execute the following comm
 ```
 cargo run
 ```
+## Installation on Ubuntu
+
+Make sure you have the following installed before running:
+
+```bash
+sudo apt update
+sudo apt install build-essential pkg-config libssl-dev
+sudo apt install libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+```
 
 On the first run, you'll be prompted to choose a master password. This password will be used to encrypt and decrypt your password entries.
 
